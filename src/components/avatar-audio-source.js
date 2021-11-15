@@ -64,7 +64,7 @@ AFRAME.registerComponent("avatar-audio-source", {
     } else {
       audio = new THREE.Audio(audioListener);
     }
-    this.audioSystem.addAudio(SourceType.AVATAR_AUDIO_SOURCE, audio);
+    this.audioSystem.addAudio({ sourceType: SourceType.AVATAR_AUDIO_SOURCE, node: audio });
 
     if (SHOULD_CREATE_SILENT_AUDIO_ELS) {
       createSilentAudioEl(stream); // TODO: Do the audio els need to get cleaned up?
@@ -86,7 +86,7 @@ AFRAME.registerComponent("avatar-audio-source", {
     const audio = this.el.getObject3D(this.attrName);
     if (!audio) return;
 
-    this.audioSystem.removeAudio(audio);
+    this.audioSystem.removeAudio({ node: audio });
     this.el.removeObject3D(this.attrName);
 
     APP.audios.delete(this.el);
@@ -293,7 +293,7 @@ AFRAME.registerComponent("audio-target", {
     } else {
       audio = new THREE.Audio(audioListener);
     }
-    this.audioSystem.addAudio(SourceType.AVATAR_AUDIO_SOURCE, audio);
+    this.audioSystem.addAudio({ sourceType: SourceType.AVATAR_AUDIO_SOURCE, node: this.audio });
 
     if (this.data.maxDelay > 0) {
       const delayNode = audio.context.createDelay(this.data.maxDelay);
@@ -305,7 +305,7 @@ AFRAME.registerComponent("audio-target", {
     audio.matrixNeedsUpdate = true;
     audio.updateMatrixWorld();
 
-    audio.updateMatrixWorld();
+    this.audio.updateMatrixWorld();
     APP.audios.set(this.el, audio);
     updateAudioSettings(this.el, audio);
   },
@@ -328,7 +328,7 @@ AFRAME.registerComponent("audio-target", {
     const audio = this.el.getObject3D(this.attrName);
     if (!audio) return;
 
-    this.audioSystem.removeAudio(audio);
+    this.audioSystem.removeAudio({ node: this.audio });
     this.el.removeObject3D(this.attrName);
 
     APP.supplementaryAttenuation.delete(this.el);
