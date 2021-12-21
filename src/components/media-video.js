@@ -339,7 +339,7 @@ AFRAME.registerComponent("media-video", {
   setupAudio() {
     if (this.audio) {
       this.el.removeObject3D("sound");
-      this.audioSystem.removeAudio(this.audio);
+      this.audioSystem.removeAudio({ node: this.audio });
     }
     APP.sourceType.set(this.el, SourceType.MEDIA_VIDEO);
 
