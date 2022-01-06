@@ -9,6 +9,7 @@ import { ReactComponent as ObjectIcon } from "../icons/Object.svg";
 import { ReactComponent as AvatarIcon } from "../icons/Avatar.svg";
 import { ReactComponent as SceneIcon } from "../icons/Scene.svg";
 import { ReactComponent as UploadIcon } from "../icons/Upload.svg";
+import { ReactComponent as NftIcon } from "../icons/nft-icon.svg";
 import { PlacePopoverButton } from "./PlacePopover";
 import { ObjectUrlModalContainer } from "./ObjectUrlModalContainer";
 import configs from "../../utils/configs";
@@ -83,6 +84,13 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistorie
               color: "accent3",
               label: <FormattedMessage id="place-popover.item-type.upload" defaultMessage="Upload" />,
               onSelect: () => showNonHistoriedDialog(ObjectUrlModalContainer, { scene })
+            },
+            {
+              id: "Nfts",
+              icon: NftIcon,
+              color: "orange",
+              label: <FormattedMessage id="place-popover.item-type.Nft" defaultMessage="import NFT" />,
+              onSelect: () => mediaSearchStore.sourceNavigate("Nfts")
             }
           ];
         }

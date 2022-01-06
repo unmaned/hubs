@@ -50,7 +50,15 @@ export const SCHEMA = {
         personalAvatarId: { type: "string" }
       }
     },
-
+    //added  wallet details
+    wallet: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        wallet: { type: "object" }
+      }
+    },
+    //////added wallet details
     credentials: {
       type: "object",
       additionalProperties: false,
