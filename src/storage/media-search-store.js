@@ -13,12 +13,12 @@ const URL_SOURCE_TO_TO_API_SOURCE = {
   gifs: "tenor",
   sketchfab: "sketchfab",
   twitch: "twitch",
-  favorites: "favorites",
+  favorites: "favorites"
   //added nft section
-  nfts: "nfts"
+  // nfts: "nfts"
 };
 
-const desiredSources = ["sketchfab", "videos", "scenes", "avatars", "gifs", "images", "nfts"];
+const desiredSources = ["sketchfab", "videos", "scenes", "avatars", "gifs", "images"];
 const availableSources = desiredSources.filter(source => {
   const apiSource = URL_SOURCE_TO_TO_API_SOURCE[source];
   return configs.integration(apiSource);
