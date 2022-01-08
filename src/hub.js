@@ -205,6 +205,12 @@ window.APP.RENDER_ORDER = {
   CURSOR: 3
 };
 
+/* Moralis init code */
+const serverUrl = "https://zp8rs5pjwqjc.moralisweb3.com:2053/server";
+const appId = "HOYxDfyh7X0TJ3FqCxFf714GAGjR72rVbXpZH3yg";
+Moralis.start({ serverUrl, appId });
+/* TODO: Add Moralis Authentication code */
+
 const store = window.APP.store;
 store.update({ preferences: { shouldPromptForRefresh: undefined } }); // Clear flag that prompts for refresh from preference screen
 const mediaSearchStore = window.APP.mediaSearchStore;
