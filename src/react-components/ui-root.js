@@ -1565,6 +1565,7 @@ class UIRoot extends Component {
                           scene={this.props.scene}
                           hubChannel={this.props.hubChannel}
                           mediaSearchStore={this.props.mediaSearchStore}
+                          nftSearchStore={this.props.nftSearchStore}
                           showNonHistoriedDialog={this.showNonHistoriedDialog}
                         />
                         {this.props.hubChannel.can("spawn_emoji") && <ReactionPopoverContainer />}

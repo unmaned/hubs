@@ -15,7 +15,7 @@ import { ObjectUrlModalContainer } from "./ObjectUrlModalContainer";
 import configs from "../../utils/configs";
 import { FormattedMessage } from "react-intl";
 
-export function PlacePopoverContainer({ scene, mediaSearchStore, showNonHistoriedDialog, hubChannel }) {
+export function PlacePopoverContainer({ scene, mediaSearchStore, nftSearchStore, showNonHistoriedDialog, hubChannel }) {
   const [items, setItems] = useState([]);
 
   useEffect(

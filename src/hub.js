@@ -208,10 +208,11 @@ window.APP.RENDER_ORDER = {
 const store = window.APP.store;
 store.update({ preferences: { shouldPromptForRefresh: undefined } }); // Clear flag that prompts for refresh from preference screen
 const mediaSearchStore = window.APP.mediaSearchStore;
+const nftSearchStore = window.APP.NftSearchStore; //added nft store into app
 const OAUTH_FLOW_PERMS_TOKEN_KEY = "ret-oauth-flow-perms-token";
 const NOISY_OCCUPANT_COUNT = 30; // Above this # of occupants, we stop posting join/leaves/renames
 
-const qs = new URLSearchParams(location.search);
+const qs = new URLSearchParams(location.search); //gets the current location
 const isMobile = AFRAME.utils.device.isMobile();
 const isMobileVR = AFRAME.utils.device.isMobileVR();
 const isEmbed = window.self !== window.top;
@@ -347,6 +348,7 @@ function mountUI(props = {}) {
                     forcedVREntryType,
                     store,
                     mediaSearchStore,
+                    nftSearchStore, //added nft Store into UIROOT
                     ...props,
                     ...routeProps
                   }}
