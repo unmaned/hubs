@@ -90,7 +90,7 @@ export function PlacePopoverContainer({ scene, mediaSearchStore, nftSearchStore,
               icon: NftIcon,
               color: "orange",
               label: <FormattedMessage id="place-popover.item-type.Nft" defaultMessage="import NFT" />,
-              onSelect: () => mediaSearchStore.sourceNavigate("Nfts")
+              onSelect: () => mediaSearchStore.sourceNavigate("nfts")
             }
           ];
         }

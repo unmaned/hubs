@@ -114,7 +114,7 @@ TileAction.propTypes = {
 
 export function CreateTile({ label, type, ...rest }) {
   return (
-    <BaseTile className={styles.createTile} wide={type === "scene"} tall={type === "avatar"} {...rest}>
+    <BaseTile className={styles.createTile} wide={type === "scene"} tall={type === "avatar" || "nfts"} {...rest}>
       <div className={styles.createTileContent}>
         <AddIcon width={48} height={48} />
         <p>{label}</p>
@@ -131,6 +131,7 @@ CreateTile.propTypes = {
 export function MediaTile({ entry, processThumbnailUrl, onClick, onEdit, onShowSimilar, onCopy, onInfo, ...rest }) {
   const intl = useIntl();
   const creator = entry.attributions && entry.attributions.creator;
+  const isNft = entry;
   const publisherName =
     (entry.attributions && entry.attributions.publisher && entry.attributions.publisher.name) ||
     PUBLISHER_FOR_ENTRY_TYPE[entry.type];

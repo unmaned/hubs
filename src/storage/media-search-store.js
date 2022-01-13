@@ -2,7 +2,7 @@ import { EventTarget } from "event-target-shim";
 import configs from "../utils/configs";
 import { getReticulumFetchUrl, fetchReticulumAuthenticated, hasReticulumServer } from "../utils/phoenix-utils";
 import { pushHistoryPath, sluglessPath, withSlug } from "../utils/history";
-
+import { getNfts, isCryptoAuthenticated } from "../utils/moralis-utils";
 const EMPTY_RESULT = { entries: [], meta: {} };
 
 const URL_SOURCE_TO_TO_API_SOURCE = {
@@ -13,23 +13,27 @@ const URL_SOURCE_TO_TO_API_SOURCE = {
   gifs: "tenor",
   sketchfab: "sketchfab",
   twitch: "twitch",
-  favorites: "favorites"
+  favorites: "favorites",
   //added nft section
-  // nfts: "nfts"
+  nfts: "nfts"
 };
 
-const desiredSources = ["sketchfab", "videos", "scenes", "avatars", "gifs", "images"];
+const desiredSources = ["nfts", "sketchfab", "videos", "scenes", "avatars", "gifs", "images"];
 const availableSources = desiredSources.filter(source => {
-  const apiSource = URL_SOURCE_TO_TO_API_SOURCE[source];
-  return configs.integration(apiSource);
+  if (source !== "nfts") {
+    const apiSource = URL_SOURCE_TO_TO_API_SOURCE[source];
+    return configs.integration(apiSource);
+  }
+  return; //working
 });
-export const SOURCES = availableSources;
+export const SOURCES = desiredSources; // sources = available sources to desired sources to accomadate nfts
 
 export const MEDIA_SOURCE_DEFAULT_FILTERS = {
   gifs: "trending",
   sketchfab: "featured",
   scenes: "featured",
-  favorites: "my-favorites"
+  favorites: "my-favorites",
+  nfts: "my-nfts"
 };
 
 const SEARCH_CONTEXT_PARAMS = ["q", "filter", "cursor", "similar_to"];
@@ -53,6 +57,9 @@ export default class MediaSearchStore extends EventTarget {
     });
   }
 
+  _testingPrpperties = async => {
+    console.log("property is run without calling");
+  };
   _update = async location => {
     this.result = null;
     this.dispatchEvent(new CustomEvent("statechanged"));
@@ -81,6 +88,9 @@ export default class MediaSearchStore extends EventTarget {
     searchParams.get("locale", navigator.languages[0]);
 
     let source;
+    if (urlSource === "nfts") {
+      source = urlSource;
+    }
     if (urlSource === "avatars" || urlSource === "scenes") {
       // Avatars + scenes are special since we request them from a different source based on the facet.
       const singular = urlSource === "avatars" ? "avatar" : "scene";
@@ -101,22 +111,39 @@ export default class MediaSearchStore extends EventTarget {
         }
       }
     }
+    if (source === "nfts") {
+      // fetch nfts from here
+      console.log(source);
+      this.isFetching = true;
+      this.dispatchEvent(new CustomEvent("statechanged"));
+      const result = await getNfts();
+      console.log(result);
+      if (this.requestIndex != currentRequestIndex) return;
+      this.result = result;
+      // this.nextCursor = this.result && this.result.meta && this.result.meta.next_cursor;
+      this.isFetching = false;
+      this.dispatchEvent(new CustomEvent("statechanged"));
+    } else {
+      // non nft logic
 
-    const path = `/api/v1/media/search?${searchParams.toString()}`;
-    const url = getReticulumFetchUrl(path);
-    if (this.lastSavedUrl === url) return;
+      const path = `/api/v1/media/search?${searchParams.toString()}`;
+      const url = getReticulumFetchUrl(path);
+      console.log(path);
 
-    this.isFetching = true;
-    this.dispatchEvent(new CustomEvent("statechanged"));
-    const result = fetch ? await fetchReticulumAuthenticated(path) : EMPTY_RESULT;
+      if (this.lastSavedUrl === url) return;
 
-    if (this.requestIndex != currentRequestIndex) return;
+      this.isFetching = true;
+      this.dispatchEvent(new CustomEvent("statechanged"));
+      const result = fetch ? await fetchReticulumAuthenticated(path) : EMPTY_RESULT;
 
-    this.result = result;
-    this.nextCursor = this.result && this.result.meta && this.result.meta.next_cursor;
-    this.lastFetchedUrl = url;
-    this.isFetching = false;
-    this.dispatchEvent(new CustomEvent("statechanged"));
+      if (this.requestIndex != currentRequestIndex) return;
+
+      this.result = result;
+      this.nextCursor = this.result && this.result.meta && this.result.meta.next_cursor;
+      this.lastFetchedUrl = url;
+      this.isFetching = false;
+      this.dispatchEvent(new CustomEvent("statechanged"));
+    }
   };
 
   pageNavigate = delta => {
@@ -225,12 +252,13 @@ export default class MediaSearchStore extends EventTarget {
 
   _sourceNavigate = async (source, hideNav, useLastStashedParams, selectAction) => {
     const currentQuery = new URLSearchParams(this.history.location.search).get("q");
-    const searchParams = this.getSearchClearedSearchParams(this.history.location);
+    const searchParams = this.getSearchClearedSearchParams(this.history.location); //clears search params
 
     if (currentQuery) {
       searchParams.set("q", currentQuery);
     } else {
       if (useLastStashedParams && this._stashedParams) {
+        // _stashedParams gives previous searched params
         for (const param of SEARCH_CONTEXT_PARAMS) {
           const value = this._stashedParams[param];
 
@@ -242,8 +270,12 @@ export default class MediaSearchStore extends EventTarget {
           }
         }
       } else {
+        if (source === "nfts") {
+          const CryptoAuthenticated = await this._isCryptoAuthenticated(); //returns tr/false if authenticate or not
+          searchParams.set("filter", CryptoAuthenticated ? "my-nfts" : "featured");
+        }
         if (source === "avatars") {
-          const hasAccountWithAvatars = await this._hasAccountWithAvatars();
+          const hasAccountWithAvatars = await this._hasAccountWithAvatars(); // returns true/false if avatars exist or not
           searchParams.set("filter", hasAccountWithAvatars ? "my-avatars" : "featured");
         } else if (MEDIA_SOURCE_DEFAULT_FILTERS[source]) {
           searchParams.set("filter", MEDIA_SOURCE_DEFAULT_FILTERS[source]);
@@ -264,6 +296,7 @@ export default class MediaSearchStore extends EventTarget {
 
     if (hasReticulumServer() && document.location.host !== configs.RETICULUM_SERVER) {
       searchParams.set("media_source", source);
+      console.log(this.history, this.history.location.pathname, searchParams.toString());
       pushHistoryPath(this.history, this.history.location.pathname, searchParams.toString());
     } else {
       pushHistoryPath(this.history, withSlug(this.history.location, `/media/${source}`), searchParams.toString());
@@ -282,13 +315,26 @@ export default class MediaSearchStore extends EventTarget {
     return !!(result && result.entries) && result.entries.length > 0;
   };
 
+  _isCryptoAuthenticated = async () => {
+    //go to moralis utils and check if user is authenticated
+    // if authenticated get his nfts
+    //
+    const result = await isCryptoAuthenticated();
+    const searchParams = new URLSearchParams();
+    const source = "nfts";
+    searchParams.set("source", source);
+    // searchParams.set("usercrypto", result);
+    return result;
+  };
+
   getUrlMediaSource = location => {
     const { search } = location;
     const urlParams = new URLSearchParams(search);
     const pathname = sluglessPath(location);
 
     if (!pathname.startsWith("/media") && !urlParams.get("media_source")) return null;
-    return urlParams.get("media_source") || pathname.substring(7);
+
+    return urlParams.get("media_source") || pathname.substring(7); //-> returns avatars | scene |gifs etc
   };
 
   pushExitMediaBrowserHistory = (history, stashLastSearchParams = true) => {

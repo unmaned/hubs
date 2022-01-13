@@ -14,6 +14,7 @@ import { ReactComponent as UploadIcon } from "./icons/Upload.svg";
 import { ReactComponent as LinkIcon } from "./icons/Link.svg";
 import { remixAvatar } from "../utils/avatar-utils";
 import { fetchReticulumAuthenticated, getReticulumFetchUrl } from "../utils/phoenix-utils";
+import { isCryptoAuthenticated } from "../utils/moralis-utils";
 import { proxiedUrlFor, scaledThumbnailUrlFor } from "../utils/media-url-utils";
 import { CreateTile, MediaTile } from "./room/MediaTiles";
 import { SignInMessages } from "./auth/SignInModal";
@@ -56,6 +57,7 @@ const DEFAULT_FACETS = {
     { text: "My Avatars", params: { filter: "my-avatars" } },
     { text: "Newest", params: { filter: "" } }
   ],
+  nfts: [{ text: "ethereum", params: { filter: "featured" } }, { text: "My Nfts", params: { filter: "my-nfts" } }],
   favorites: [],
   scenes: [{ text: "Featured", params: { filter: "featured" } }, { text: "My Scenes", params: { filter: "my-scenes" } }]
 };
@@ -88,6 +90,10 @@ const poweredByMessages = defineMessages({
   scenes: {
     id: "media-browser.powered_by.scenes",
     defaultMessage: "Made with {editorName}"
+  },
+  nfts: {
+    id: "media-browser.powered_by.nfts",
+    defaultMessage: "Made with moralis"
   }
 });
 
@@ -115,7 +121,8 @@ const searchPlaceholderMessages = defineMessages({
   gifs: { id: "media-browser.search-placeholder.gifs", defaultMessage: "Search for GIFs..." },
   twitch: { id: "media-browser.search-placeholder.twitch", defaultMessage: "Search for Twitch streams..." },
   sketchfab: { id: "media-browser.search-placeholder.sketchfab", defaultMessage: "Search Sketchfab Models..." },
-  default: { id: "media-browser.search-placeholder.default", defaultMessage: "Search..." }
+  default: { id: "media-browser.search-placeholder.default", defaultMessage: "Search..." },
+  nfts: { id: "media-browser.search-placeholder.nfts", defaultMessage: "Search nfts..." }
 });
 
 const emptyMessages = defineMessages({
@@ -338,6 +345,10 @@ class MediaBrowserContainer extends Component {
     window.dispatchEvent(new CustomEvent("action_create_avatar"));
   };
 
+  onCreateNft = () => {
+    //dummy placeholder to add nft creation
+  };
+
   processThumbnailUrl = (entry, thumbnailWidth, thumbnailHeight) => {
     if (entry.images.preview.type === "mp4") {
       return proxiedUrlFor(entry.images.preview.url);
@@ -492,6 +503,10 @@ class MediaBrowserContainer extends Component {
                 label={<FormattedMessage id="media-browser.create-avatar" defaultMessage="Create Avatar" />}
               />
             )}
+            {urlSource === "nfts" &&
+              entries.map(entry => {
+                return <MediaTile />;
+              })}
             {urlSource === "scenes" &&
               configs.feature("enable_spoke") && (
                 <CreateTile
@@ -509,52 +524,53 @@ class MediaBrowserContainer extends Component {
                   }
                 />
               )}
-            {entries.map((entry, idx) => {
-              const isAvatar = entry.type === "avatar" || entry.type === "avatar_listing";
-              const isScene = entry.type === "scene" || entry.type === "scene_listing";
-              const onShowSimilar =
-                entry.type === "avatar_listing"
-                  ? e => {
-                      e.preventDefault();
-                      this.onShowSimilar(entry.id, entry.name);
-                    }
-                  : undefined;
+            {urlSource !== "nfts" &&
+              entries.map((entry, idx) => {
+                const isAvatar = entry.type === "avatar" || entry.type === "avatar_listing";
+                const isScene = entry.type === "scene" || entry.type === "scene_listing";
+                const onShowSimilar =
+                  entry.type === "avatar_listing"
+                    ? e => {
+                        e.preventDefault();
+                        this.onShowSimilar(entry.id, entry.name);
+                      }
+                    : undefined;
 
-              let onEdit;
+                let onEdit;
 
-              if (entry.type === "avatar") {
-                onEdit = e => {
-                  e.preventDefault();
-                  pushHistoryState(this.props.history, "overlay", "avatar-editor", { avatarId: entry.id });
-                };
-              } else if (entry.type === "scene") {
-                onEdit = e => {
-                  e.preventDefault();
-                  const spokeProjectUrl = getReticulumFetchUrl(`/spoke/projects/${entry.project_id}`);
-                  window.open(spokeProjectUrl);
-                };
-              }
+                if (entry.type === "avatar") {
+                  onEdit = e => {
+                    e.preventDefault();
+                    pushHistoryState(this.props.history, "overlay", "avatar-editor", { avatarId: entry.id });
+                  };
+                } else if (entry.type === "scene") {
+                  onEdit = e => {
+                    e.preventDefault();
+                    const spokeProjectUrl = getReticulumFetchUrl(`/spoke/projects/${entry.project_id}`);
+                    window.open(spokeProjectUrl);
+                  };
+                }
 
-              let onCopy;
+                let onCopy;
 
-              if (isAvatar) {
-                onCopy = e => this.handleCopyAvatar(e, entry);
-              } else if (isScene) {
-                onCopy = e => this.handleCopyScene(e, entry);
-              }
+                if (isAvatar) {
+                  onCopy = e => this.handleCopyAvatar(e, entry);
+                } else if (isScene) {
+                  onCopy = e => this.handleCopyScene(e, entry);
+                }
 
-              return (
-                <MediaTile
-                  key={`${entry.id}_${idx}`}
-                  entry={entry}
-                  processThumbnailUrl={this.processThumbnailUrl}
-                  onClick={e => this.handleEntryClicked(e, entry)}
-                  onEdit={onEdit}
-                  onShowSimilar={onShowSimilar}
-                  onCopy={onCopy}
-                />
-              );
-            })}
+                return (
+                  <MediaTile
+                    key={`${entry.id}_${idx}`}
+                    entry={entry}
+                    processThumbnailUrl={this.processThumbnailUrl}
+                    onClick={e => this.handleEntryClicked(e, entry)}
+                    onEdit={onEdit}
+                    onShowSimilar={onShowSimilar}
+                    onCopy={onCopy}
+                  />
+                );
+              })}
           </>
         ) : null}
       </MediaBrowser>

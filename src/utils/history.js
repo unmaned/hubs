@@ -44,7 +44,7 @@ function pushOrUpdateHistory(history, replace, k, v, detail, newPathname, newSea
   const method = replace || isDuplicate ? history.replace : history.push;
   state.__historyLength = newLength;
 
-  method({ pathname, search, state, hash });
+  method({ pathname, search, state, hash }); //actual history push happens hear
 }
 
 export function pushHistoryState(history, k, v, detail) {
@@ -56,6 +56,7 @@ export function replaceHistoryState(history, k, v, detail) {
 }
 
 export function pushHistoryPath(history, path, search) {
+  //path ="/" search example="filter=featured&media_source=sketchfab"
   pushOrUpdateHistory(history, false, null, null, null, path, search);
 }
 
@@ -106,5 +107,6 @@ export function sluglessPath(location) {
 // provided path.
 export function withSlug(location, path) {
   const parts = location.pathname.split("/");
+  console.log(`/${parts[1]}${path}`);
   return `/${parts[1]}${path}`;
 }
